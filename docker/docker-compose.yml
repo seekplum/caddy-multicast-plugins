@@ -1,0 +1,24 @@
+version: "3.8"
+
+services:
+  caddy:
+    image: ${CADDY_IMAGE}
+    restart: always
+    ports:
+      - 8080:80
+      - 2019:2019
+    volumes:
+      - ../caddy/Caddyfile:/etc/caddy/Caddyfile:ro
+      - ../caddy/html:/usr/share/caddy/:ro
+      - ../caddy/data/:/data/
+    build:
+      context: ..
+      dockerfile: ./docker/Dockerfile
+      args:
+        VERSION: ${CADDY_VERSION}
+  httpbin1:
+    image: mccutchen/go-httpbin
+    restart: always
+  httpbin2:
+    image: mccutchen/go-httpbin
+    restart: always

@@ -1,0 +1,59 @@
+(log_config) {
+	output stdout
+
+	format json {
+		time_local
+		time_format wall_milli
+	}
+}
+
+{
+	log {
+		import log_config
+	}
+	local_certs
+	debug
+	auto_https off
+}
+
+:443 {
+	tls internal {
+		on_demand
+	}
+}
+
+:80 {
+	log {
+		import log_config
+	}
+
+	root * /usr/share/caddy/static
+	file_server
+	encode gzip
+
+	@notApi not path /api/* /static/*
+	handle @notApi {
+		header index.html Cache-Control no-cache
+		try_files {path} {path} index.html
+	}
+
+	route /static/* {
+		uri strip_prefix /static
+		try_files {uri} {uri}
+	}
+
+	route /api/* {
+		uri strip_prefix /api
+		reverse_proxy httpbin1:8080
+	}
+
+	route /api/multicast/* {
+		uri strip_prefix /api/multicast
+		multicast {
+			backends http://httpbin1:8080 http://httpbin2:8080
+			mode any
+		}
+	}
+
+	header Cache-Control no-cache
+}
